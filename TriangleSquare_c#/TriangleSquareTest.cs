@@ -109,12 +109,32 @@ namespace CalcSquareTest
             actual = TriangleSquare.CalcTriangleSquare(a, b, c);
         }
 
+        [TestMethod()]
+        [ExpectedException(typeof(System.ArgumentException))]
+        public void CalcTriangleSquareTestLessZeroParams()
+        {
+            double a = -10;
+            double b = 1;
+            double c = Math.Sqrt(2D);
+            double expected = 0.5D;
+            double actual;
+            actual = TriangleSquare.CalcTriangleSquare(a, b, c);
+        }
+
         [TestMethod]
         public void HasMinDiffTest()
         {
             double expected = 23/100000D;
             double actual = 0.00023D;
             Assert.IsTrue(TriangleSquare.HasMinDiff(expected, actual, 1), String.Format("Ошибка Ожидается: <{0}>. Фактически: <{1}>.", expected, actual));
+            
+            expected = -0D;
+            actual = +0D;
+            Assert.IsTrue(TriangleSquare.HasMinDiff(expected, actual, 1), String.Format("Ошибка Ожидается: <{0}>. Фактически: <{1}>.", expected, actual));
+
+            expected = -10D;
+            actual = +10D;
+            Assert.IsFalse(TriangleSquare.HasMinDiff(expected, actual, 1), String.Format("Ошибка Ожидается: <{0}>. Фактически: <{1}>.", expected, actual));
         }
     }
 }

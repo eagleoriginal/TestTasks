@@ -17,7 +17,7 @@ namespace CalcSquare
         /// <returns>Square of Rectangle</returns>
         public static double CalcTriangleSquare(double a, double b, double c)
         {
-            if (a <= +0 || b <= +0 || c <= +0)
+            if (a <= 0 || b <= 0 || c <= 0)
             {
                 throw new ArgumentException("Sides Cannot be Zero or Less zero");
             }
