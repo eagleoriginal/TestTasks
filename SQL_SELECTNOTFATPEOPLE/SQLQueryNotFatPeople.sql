@@ -12,7 +12,7 @@ RegistrationDateTime [datetime] NOT NULL
 )
 
 CREATE TABLE #CustomerPurchase_q(
-CustomerId [int] FOREIGN KEY References #CustomerPeople_q(CustomerId),
+CustomerId [int] References #CustomerPeople_q(CustomerId),
 PurchaiseDatetime [datetime] NOT NULL,
 ProductName nvarchar(100) NOT NULL
 )
@@ -41,3 +41,6 @@ where
 PurchaiseDatetime >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)
 AND ProductName like 'smetana') 
 order by CustomerId
+
+Drop table #CustomerPeople_q;
+Drop table #CustomerPurchase_q;
