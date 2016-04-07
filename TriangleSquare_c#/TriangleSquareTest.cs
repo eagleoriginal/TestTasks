@@ -112,9 +112,9 @@ namespace CalcSquareTest
         [TestMethod]
         public void HasMinDiffTest()
         {
-            double expected = 1000000.0011D;
-            double actual = 1000000.001D;
-            Assert.IsTrue(TriangleSquare.HasMinDiff(expected, actual, 5), String.Format("Ошибка Ожидается: <{0}>. Фактически: <{1}>.", expected, actual));
+            double expected = 23/100000D;
+            double actual = 0.00023D;
+            Assert.IsTrue(TriangleSquare.HasMinDiff(expected, actual, 1), String.Format("Ошибка Ожидается: <{0}>. Фактически: <{1}>.", expected, actual));
         }
     }
 }
