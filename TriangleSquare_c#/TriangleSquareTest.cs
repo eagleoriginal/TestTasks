@@ -71,10 +71,10 @@ namespace CalcSquareTest
         [TestMethod()]
         public void CalcTriangleSquareTest()
         {
-            double a = 1F;  
-            double b = 1F;  
-            double c = Math.Sqrt(2F);  
-            double expected = 0.5F;  
+            double a = 1D;  
+            double b = 1D;  
+            double c = Math.Sqrt(2D);  
+            double expected = 0.5D;  
             double actual;
             actual = TriangleSquare.CalcTriangleSquare(a, b, c);
             Assert.IsTrue(TriangleSquare.HasMinDiff(expected, actual, 10),
@@ -86,10 +86,10 @@ namespace CalcSquareTest
         [ExpectedException(typeof(System.ArgumentException))]
         public void CalcTriangleSquareTestNotTriangleParams()
         {
-            double a = 1F;  
-            double b = 2F;  
-            double c = Math.Sqrt(2F);  
-            double expected = 0.5F;  
+            double a = 1D;  
+            double b = 2D;  
+            double c = Math.Sqrt(2D);  
+            double expected = 0.5D;  
             double actual;
             actual = TriangleSquare.CalcTriangleSquare(a, b, c);
             Assert.IsTrue(TriangleSquare.HasMinDiff(expected, actual, 10),
@@ -102,9 +102,9 @@ namespace CalcSquareTest
         public void CalcTriangleSquareTestNanParams()
         {
             double a = double.NaN; 
-            double b = 1F; 
-            double c = Math.Sqrt(2F);  
-            double expected = 0.5F;  
+            double b = 1D; 
+            double c = Math.Sqrt(2D);  
+            double expected = 0.5D;  
             double actual;
             actual = TriangleSquare.CalcTriangleSquare(a, b, c);
         }
@@ -112,8 +112,8 @@ namespace CalcSquareTest
         [TestMethod]
         public void HasMinDiffTest()
         {
-            double expected = 1000000.0011F;
-            double actual = 1000000.001F;
+            double expected = 1000000.0011D;
+            double actual = 1000000.001D;
             Assert.IsTrue(TriangleSquare.HasMinDiff(expected, actual, 5), String.Format("Ошибка Ожидается: <{0}>. Фактически: <{1}>.", expected, actual));
         }
     }
