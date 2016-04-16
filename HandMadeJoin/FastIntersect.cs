@@ -9,6 +9,14 @@ namespace ApplyTwoArray
 {
     public class FastIntersect
     {
+        /// <summary>
+        /// Intersect two Collections
+        /// </summary>
+        /// <typeparam name="T">Type of Collections</typeparam>
+        /// <param name="arrFirst">First Collection</param>
+        /// <param name="arrSecond">Second Collection</param>
+        /// <param name="comparer">Comparer for Type T</param>
+        /// <returns>Intersected Multiple. Not Null</returns>
         public static IEnumerable<T> HandMadeIntersect<T>(ICollection<T> arrFirst, ICollection<T> arrSecond, Comparer<T> comparer) where T : struct
         {
             if ((arrFirst == null) || (arrSecond == null) || (comparer == null))
