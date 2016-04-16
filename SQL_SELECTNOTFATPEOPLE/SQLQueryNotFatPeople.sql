@@ -3,12 +3,15 @@ use AdventureWorks2014;
 IF OBJECT_ID('tempDB..#CustomerPeople_q', 'U') IS NOT NULL 
 	Drop table #CustomerPeople_q;
 
+	select OBJECT_ID('tempDB..#CustomerPurchase_q', 'U')
 IF OBJECT_ID('tempDB..#CustomerPurchase_q', 'U') IS NOT NULL 
-	Drop table #CustomerPurchase_q;
+	Drop table tempDB..#CustomerPurchase_q;
+
+
 
 CREATE TABLE #CustomerPeople_q(
 CustomerId [int] PRIMARY KEY IDENTITY(1,1) NOT NULL,
-RegistrationDateTime [datetime] NOT NULL
+RegistrationDateTime [datetime] DEFAULT GetDate() NOT NULL
 )
 
 CREATE TABLE #CustomerPurchase_q(
