@@ -361,3 +361,139 @@ Sub.prototype.constructor = Sub;       // restore the back-pointer
   > **`{ m() {} }` / `class { m() {} }` create functions that are *only* callable as methods — no `new`, no
   `.prototype`. `{ m: function() {} }` creates a regular constructable function that just happens to live on an
   object.**
+
+
+
+    ## Q1 — `const obj = { m: function () {} }`
+
+  Your model is correct, with a small refinement about the function's `name`.
+
+  What happens:
+
+  1. A new plain object is created.
+  2. `m` is an **own** property on that object — not on its prototype (which is `Object.prototype`).
+  3. The value of `m` is a regular function.
+  4. That function has its own `.prototype` property and is constructable (`new obj.m()` works).
+
+  ```js
+  const obj = { m: function () {} };
+
+  Object.hasOwn(obj, "m");          // true   ← own property
+  Object.hasOwn(Object.getPrototypeOf(obj), "m");   // false
+
+  typeof obj.m;                     // "function"
+  obj.m.prototype;                  // {} — exists
+  new obj.m();                      // works → {}
+
+  obj.m.name;                       // "m"   ← inferred from the property key
+  ```
+
+  The only nuance: the function expression `function () {}` is **anonymous in the source**, but ES2015 added *function
+  name inference*. When an anonymous function expression is on the right side of a property assignment, default param,
+  `const x = …`, etc., the engine sets `f.name` to the identifier on the left. So `obj.m.name === "m"` even though you
+  didn't type `function m() {}` explicitly.
+
+  You can also write the name explicitly — `{ m: function m() {} }` — and the only extra thing you get is the ability to
+   refer to `m` *inside the body* (useful for self-recursion). The observable `name` property is the same.
+
+  Memory layout:
+
+  ```
+  obj  (own property m)
+   │
+   │ m: ───────────►  function f
+   │                  ├── prototype: {}
+   │ [[Proto]] ──►  Object.prototype  ──►  null
+  ```
+
+  ---
+
+  ## Q2 — `class SomeClass { m = function () {} }`
+
+  Your hypothesis was that the function is created once and all instances share a pointer to it. **That's the opposite
+  of what happens.** Class field initializers run **per instance**, inside the constructor.
+
+  The line
+
+  ```js
+  class SomeClass {
+    m = function () {};
+  }
+  ```
+
+  is roughly equivalent to:
+
+  ```js
+  class SomeClass {
+    constructor() {
+      this.m = function () {};   // ← runs on every `new`
+    }
+  }
+  ```
+
+  Every time `new SomeClass()` runs, the function expression is **re-evaluated**, producing a **new `Function` object**.
+   Function expressions aren't hoisted to a shared location — they're expressions that emit a new function each time
+  control reaches them.
+
+  Verify it:
+
+  ```js
+  class SomeClass {
+    m = function () {};
+  }
+
+  const a = new SomeClass();
+  const b = new SomeClass();
+
+  a.m === b.m;                     // false  ← different function objects
+  Object.hasOwn(a, "m");           // true   ← own property of the instance
+  SomeClass.prototype.m;           // undefined  ← NOT on the prototype
+  ```
+
+  Compare the three placements:
+
+  ```js
+  class C {
+    shared()       {}                 // (1) on C.prototype, ONE function for all instances
+    ownRegular  =  function () {};    // (2) own per-instance property — fresh function per `new`
+    ownArrow    =  () => {};          // (3) own per-instance property — fresh arrow per `new`,
+                                      //     and `this` captured from the instance
+  }
+
+  const x = new C();
+  const y = new C();
+
+  x.shared     === y.shared;        // true   — same function on the prototype
+  x.ownRegular === y.ownRegular;    // false  — fresh per instance
+  x.ownArrow   === y.ownArrow;      // false  — fresh per instance
+  ```
+
+  | Placement | Stored on | Per-instance? | Shared? | Has `.prototype`? | Bound `this`? |
+  |---|---|---|---|---|---|
+  | `m() {}` (shorthand) | `C.prototype` | no | yes | no | no — set by call site |
+  | `m = function () {}` (field) | the instance | **yes** | no | yes | no — set by call site |
+  | `m = () => {}` (field) | the instance | **yes** | no | no | **yes** — captured from instance |
+
+  ### Memory consequence
+
+  For 10 000 instances × 8 fields that each initialize a function:
+
+  - Field-with-function: **80 000** function objects in memory.
+  - Shorthand on prototype: **8** function objects.
+
+  Two orders of magnitude. Class fields are the right tool when you need per-instance privacy (`#x`), per-instance bound
+   `this`, or per-instance state — not as a default style for methods.
+
+  ### Why the intuition fails
+
+  Function expressions are *expressions*, not declarations. They are evaluated when control reaches them — never
+  hoisted, never shared, never deduplicated. The engine has no way to know whether two textually identical `function ()
+  {}`s should be treated as the same object (they might capture different surrounding variables, for example). So it
+  always creates a fresh one.
+
+  ### Two-line rule
+
+  > 1. `{ m: function () {} }` puts a regular constructable function on the **object as an own property**; its `name` is
+   inferred to `"m"`.
+  > 2. `class C { m = function () {} }` puts a regular constructable function on **every instance individually** — fresh
+   per `new`, NOT on `C.prototype`, NOT shared between instances.
