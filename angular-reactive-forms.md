@@ -5,8 +5,8 @@
 и содержит ровно то, что написано рядом. Там, где конструкции в репозитории нет вовсе, пример
 помечен как **синтетический** — таких мест шесть, и все они названы явно.
 
-Утверждения про API сверены с `node_modules/@angular/forms/types/forms.d.ts` установленной
-версии, а не с angular.dev: в формах слишком много поменялось между 14 и 22, чтобы верить памяти.
+Утверждения про API сверены с типами установленной версии, а не с angular.dev: в формах
+слишком много поменялось между 14 и 22, чтобы верить памяти.
 
 Соседний документ: [angular-animations-triggers.md](angular-animations-triggers.md).
 
@@ -44,13 +44,13 @@
 ## 2. Что можно вписать в `fb.group({...})` — ровно пять форм
 
 Главный источник тревоги: смотришь на `['', [Validators.required]]` и не помнишь, что здесь
-значение, что валидатор и что ещё бывает. Ответ закрытый и лежит в JSDoc самого метода
-(`forms.d.ts:4913-4963`), а тип кортежа — в `ControlConfig<T>` (`forms.d.ts:4820-4824`):
+значение, что валидатор и что ещё бывает. Ответ закрытый и лежит в JSDoc самого метода, а тип
+кортежа — в `ControlConfig<T>`:
 
 ```ts
 type ControlConfig<T> = [
-    T | FormControlState<T>,                 // значение — или {value, disabled}
-    (ValidatorFn | ValidatorFn[])?,          // синхронные валидаторы — или AbstractControlOptions
+    T | FormControlState<T>, // значение — или {value, disabled}
+    (ValidatorFn | ValidatorFn[])?, // синхронные валидаторы — или AbstractControlOptions
     (AsyncValidatorFn | AsyncValidatorFn[])? // асинхронные валидаторы
 ];
 ```
@@ -103,8 +103,8 @@ this.authGroup = this.formBuilder.group({
 
 ### Чего писать не надо
 
-`new FormControl(value, opts, asyncValidator)` — трёхаргументная форма помечена deprecated
-(`forms.d.ts:1436-1438`) с формулировкой «при переданном `options` аргумент `asyncValidator`
+`new FormControl(value, opts, asyncValidator)` — трёхаргументная форма помечена deprecated с
+формулировкой «при переданном `options` аргумент `asyncValidator`
 не имеет эффекта». То есть асинхронный валидатор **молча игнорируется**. Передаёте объект
 опций — складывайте асинхронные валидаторы туда же, в `asyncValidators`.
 
@@ -114,7 +114,7 @@ this.authGroup = this.formBuilder.group({
 
 Второй источник тревоги — «а что ещё сюда можно вписать?». Ничего. Список исчерпывающий.
 
-`AbstractControlOptions` (`forms.d.ts:2382-2398`) — для группы, массива и контрола:
+`AbstractControlOptions` — для группы, массива и контрола:
 
 | Поле | Тип |
 |---|---|
@@ -122,7 +122,7 @@ this.authGroup = this.formBuilder.group({
 | `asyncValidators` | `AsyncValidatorFn \| AsyncValidatorFn[] \| null` |
 | `updateOn` | `'change' \| 'blur' \| 'submit'` |
 
-`FormControlOptions` (`forms.d.ts:1390-1403`) добавляет к этому ровно одно поле:
+`FormControlOptions` добавляет к этому ровно одно поле:
 
 | Поле | Тип |
 |---|---|
@@ -135,8 +135,7 @@ this.authGroup = this.formBuilder.group({
 ### `nonNullable` делает не то, что кажется по названию
 
 Он не запрещает записать `null`. Он меняет **только поведение `reset()`**: без него `reset()`
-без аргумента ставит `null`, с ним — возвращает то значение, с которым контрол был создан
-(`forms.d.ts:1393-1397`).
+без аргумента ставит `null`, с ним — возвращает то значение, с которым контрол был создан.
 
 Отсюда прямое следствие для нашего кода: `nonNullable: true` стоит на динамических контролах
 (`marketplace-preorder-card.component.ts:332`, `:435`, `licenses-alienation.component.ts:77`),
@@ -147,7 +146,7 @@ this.authGroup = this.formBuilder.group({
 `cashboxes/cashboxes-table-editfrom/cashboxes-table-editfrom.component.ts:117`:
 
 ```ts
-// control.reset() --  тут с options nonnullable разбираться надо
+// control.reset() -- тут с options nonnullable разбираться надо
 ```
 
 Разбираться так: ячейки создаются через `fb.control({disabled, value})` без `nonNullable`
@@ -166,15 +165,15 @@ this.authGroup = this.formBuilder.group({
 везде объявлена так:
 
 ```ts
-authGroup!: FormGroup;            // marketplace-preorder-card.component.ts:233
-positionsArrayGroup!: FormArray;  // :234
+authGroup!: FormGroup; // marketplace-preorder-card.component.ts:233
+positionsArrayGroup!: FormArray; // :234
 ```
 
-**`fb.group({...})` типы выводит.** Он возвращает `FormGroup<ɵNullableFormControls<T>>`
-(`forms.d.ts:4963`), где `T` — переданный объект. Вывод выбрасывается на следующей же
-строке — в момент присваивания в поле, объявленное как голый `FormGroup`, то есть `FormGroup<any>`.
+**`fb.group({...})` типы выводит.** Он возвращает `FormGroup<ɵNullableFormControls<T>>`, где
+`T` — переданный объект. Вывод выбрасывается на следующей же строке: в момент присваивания
+в поле, объявленное как голый `FormGroup`, то есть `FormGroup<any>`.
 
-Что теряется вместе с ним: `AbstractControl.get` **типизирован** (`forms.d.ts:3133-3140`).
+Что теряется вместе с ним: `AbstractControl.get` **типизирован**.
 
 ```ts
 get<P extends string | readonly (string | number)[]>(path: P):
@@ -211,8 +210,8 @@ var curValue = (<number[]>this.targetDevices.value);
 
 ```ts
 get taskTypeSelectiongr() { return <FormGroup | null>this.authGroup.get('taskSelectionGrname'); }
-get rawCommandGr()        { return <FormGroup | null>this.authGroup.get('rawCommandGroupname'); }
-get fileGr()              { return <FormGroup | null>this.authGroup.get('fileGroupname'); }
+get rawCommandGr() { return <FormGroup | null>this.authGroup.get('rawCommandGroupname'); }
+get fileGr() { return <FormGroup | null>this.authGroup.get('fileGroupname'); }
 ```
 
 А ключи, под которыми эти группы кладутся в форму, объявлены на `:50-52`:
@@ -248,7 +247,8 @@ authGroup!: FormGroup<{
 `.value` это `any`, и цена этому — геттеры выше.
 
 Полумера, которая уже применена в репозитории ровно в одном файле и стоит копейки:
-`nameof<T>()` вместо голых строк, `marketplace-licenses-alienation/licenses-alienation.component.ts:67-72`:
+`nameof<T>()` вместо голых строк,
+`marketplace-licenses-alienation/licenses-alienation.component.ts:67-72`:
 
 ```ts
 aspFieldValidator(this.aspFormSource, nameof<LkDtos_PartnerLicenses.LicenseAlienationDto>('targetUserId'))
@@ -260,13 +260,13 @@ aspFieldValidator(this.aspFormSource, nameof<LkDtos_PartnerLicenses.LicenseAlien
 
 ### Заодно: `value` против `getRawValue()`
 
-`value` **не содержит disabled-полей**. `getRawValue()` содержит (`forms.d.ts:3066-3069`).
+`value` **не содержит disabled-полей**. `getRawValue()` содержит.
 Это самая частая причина «я же заполнил, а на сервер ушло пусто»: поле выключено через
 `disable()`, и в `value` его просто нет.
 
 ### Три дженерика, а не один
 
-`AbstractControl<TValue, TRawValue, TValueWithOptionalControlStates>` (`forms.d.ts:2536`).
+`AbstractControl<TValue, TRawValue, TValueWithOptionalControlStates>`.
 Второй — тип `getRawValue()` (с disabled-детьми), третий — тип аргумента `reset()`, который
 умеет принимать `{value, disabled}` вместо голого значения. Руками задаётся только первый,
 остальные выводятся.
@@ -287,7 +287,7 @@ aspFieldValidator(this.aspFormSource, nameof<LkDtos_PartnerLicenses.LicenseAlien
 
 **Не запускают:**
 
-- `markAsDirty()` / `markAsPristine()` (`forms.d.ts:2952-2981`);
+- `markAsDirty()` / `markAsPristine()`;
 - `markAsTouched()` / `markAsUntouched()` (`:2872-2932`);
 - `markAllAsTouched()` / `markAllAsDirty()` (`:2889-2907`).
 
@@ -302,7 +302,7 @@ aspFieldValidator(this.aspFormSource, nameof<LkDtos_PartnerLicenses.LicenseAlien
 и прогон валидаторов это разные вещи; нужен явный `updateValueAndValidity()` (§8).
 
 **`setErrors()` — особый случай.** Он не запускает валидаторы, но обновляет статус и поднимает
-изменение к родителю (`forms.d.ts:3096-3100`). И главное: выставленные вручную ошибки
+изменение к родителю. И главное: выставленные вручную ошибки
 **затираются результатом следующего прогона валидации** — прямо про это написано в JSDoc.
 Поэтому `setErrors` годится для разовой пометки и не годится для ошибки, которая должна
 пережить следующий ввод (§9).
@@ -368,9 +368,9 @@ aspFieldValidator(this.aspFormSource, nameof<LkDtos_PartnerLicenses.LicenseAlien
 Два уточнения, которых нет в старых конспектах:
 
 - **`markAs*` теперь принимают `{emitEvent}`** и эмитят в поток `events` —
-  `PristineChangeEvent` и `TouchedChangeEvent` (`forms.d.ts:2872-2981`). Валидацию они
+  `PristineChangeEvent` и `TouchedChangeEvent`. Валидацию они
   по-прежнему не запускают, но молчаливыми быть перестали.
-- **Появился `markAllAsDirty()`** (`forms.d.ts:2889`) — парный к давно знакомому
+- **Появился `markAllAsDirty()`** — парный к давно знакомому
   `markAllAsTouched()`.
 
 ---
@@ -435,14 +435,14 @@ this.cellControl(rowIndex, columnIndex)!.disable({ onlySelf: true, emitEvent: fa
 - **`onlySelf: true` на корневой группе не значит «не трогать детей».**
   `marketplace-preorder-card.component.ts:925,929` и `cashboxes-table-editfrom.component.ts:515,519`
   зовут `authGroup.disable({ onlySelf: true })`. Дети всё равно выключатся — `disable()`
-  выключает всё поддерево по определению (`forms.d.ts:3004-3007`). А предков у корня нет.
+  выключает всё поддерево по определению. А предков у корня нет.
   То есть флаг здесь не делает ничего вообще.
 
 ---
 
 ## 8. Добавить или убрать валидатор в рантайме
 
-Полный набор методов (`forms.d.ts:2729-2852`):
+Полный набор методов:
 
 | Метод | Что делает |
 |---|---|
@@ -482,7 +482,7 @@ enableControl(ctrl, true);
 Прямое следствие для `setValidatorsIfEmpty` (`formUtils.ts:31-53`):
 
 ```ts
-if (contrl.hasValidator(validators[0])) { return; }   // :39 — на фабричном валидаторе никогда не сработает
+if (contrl.hasValidator(validators[0])) { return; } // :39 — на фабричном валидаторе никогда не сработает
 contrl.setValidators(validators);
 ```
 
@@ -617,7 +617,7 @@ return (control: AbstractControl): ValidationErrors | null => {
   if (!validateSource.ErrorResult.value) { return null; }
   var aspArray = validateSource.ErrorResult.value!.get(args[1]!);
   if (Array.isArray(aspArray) && !!aspArray.length) {
-    return { [AspValidateError]: aspArray[0] };   // AspValidateError = 'aspError'
+    return { [AspValidateError]: aspArray[0] }; // AspValidateError = 'aspError'
   }
   return null;
 };
@@ -628,7 +628,7 @@ return (control: AbstractControl): ValidationErrors | null => {
 `invite-register-user.component.ts:160`).
 
 **Почему валидатором, а не `setErrors`.** Потому что ручные ошибки затираются следующим
-прогоном валидации (`forms.d.ts:3100`), а валидатор — это и есть прогон. Серверная ошибка
+прогоном валидации, а валидатор — это и есть прогон. Серверная ошибка
 держится ровно до тех пор, пока её не уберут из словаря, и переживает любой ввод. Снимается
 она явно, обычно в подписке на изменение поля — `licenses-alienation.component.ts:82-84`,
 `marketplace-preorder-card.component.ts:313-315`.
@@ -669,7 +669,7 @@ return (control: AbstractControl): ValidationErrors | null => {
 | `FormArray` | список одинаковых элементов | индексы `0..n` | однотипные |
 | `FormRecord` | словарь с динамическими ключами | приходят из данных | **однотипные** |
 
-`FormRecord extends FormGroup` (`forms.d.ts:2181`) — это буквально группа, у которой все дети
+`FormRecord extends FormGroup` — это буквально группа, у которой все дети
 обязаны быть одного типа, зато ключи можно добавлять и убирать в рантайме. Отсюда же ответ
 на вопрос «почему он биндится через `formGroupName`»: потому что он и есть `FormGroup`
 (`marketplace-preorder-card.component.html:102`).
@@ -680,11 +680,11 @@ return (control: AbstractControl): ValidationErrors | null => {
 
 ```
 authGroup (FormGroup)
-└── finArrPositions (FormArray)          — позиции заказа
-    └── [i] (FormGroup)                  — одна позиция
+└── finArrPositions (FormArray) — позиции заказа
+    └── [i] (FormGroup) — одна позиция
         ├── finInOrder (FormControl)
-        ├── finCount   (FormControl)
-        └── finRecAdvdata (FormRecord)   — ключ = серийный номер кассы
+        ├── finCount (FormControl)
+        └── finRecAdvdata (FormRecord) — ключ = серийный номер кассы
             └── "0012 3456 ..." (FormControl)
 ```
 
@@ -696,11 +696,11 @@ authGroup (FormGroup)
 ### Как доставать
 
 ```ts
-form.get('a.b.c')          // точечный путь, работает через все три класса
-form.get(['a', 0, 'c'])    // массив — единственный способ для числовых индексов
-array.at(i)                // элемент массива
-group.controls['x']        // прямой доступ к словарю детей
-record.contains('key')     // есть ли такой ключ
+form.get('a.b.c') // точечный путь, работает через все три класса
+form.get(['a', 0, 'c']) // массив — единственный способ для числовых индексов
+array.at(i) // элемент массива
+group.controls['x'] // прямой доступ к словарю детей
+record.contains('key') // есть ли такой ключ
 ```
 
 `get` возвращает `AbstractControl | null`, `at` — сам контрол. Про то, почему в репозитории
@@ -745,11 +745,11 @@ export function revalidateFormV2(cg: FormGroup<any>|FormRecord|FormArray|Abstrac
 ### Ключи группы
 
 ```ts
-group.addControl(name, control, {emitEvent?})     // добавить
-group.removeControl(name, {emitEvent?})           // убрать
-group.setControl(name, control, {emitEvent?})     // заменить (или добавить)
-group.registerControl(name, control)              // добавить без пересчёта родителя
-group.contains(name)                              // проверить
+group.addControl(name, control, {emitEvent?}) // добавить
+group.removeControl(name, {emitEvent?}) // убрать
+group.setControl(name, control, {emitEvent?}) // заменить (или добавить)
+group.registerControl(name, control) // добавить без пересчёта родителя
+group.contains(name) // проверить
 ```
 
 **Правило, которое всё упрощает: контрола нет в группе — он не валидируется и не попадает
@@ -764,7 +764,7 @@ group.contains(name)                              // проверить
 заранее собранные группы кладутся в один и тот же слот:
 
 ```ts
-this.grNone = this.formBuilder.group({});        // пустышка для «тип не выбран»
+this.grNone = this.formBuilder.group({}); // пустышка для «тип не выбран»
 // ...
 if (this.authGroup.get(this.finLegalGroup) != this.grIndividual) {
   this.grIndividual.patchValue({ ... }, { emitEvent: true });
@@ -781,9 +781,9 @@ if (this.authGroup.get(this.finLegalGroup) != this.grIndividual) {
 ### Элементы массива
 
 ```ts
-array.push(control)          array.insert(i, control)
-array.removeAt(i)            array.clear()
-array.at(i)                  array.setControl(i, control)
+array.push(control) array.insert(i, control)
+array.removeAt(i) array.clear()
+array.at(i) array.setControl(i, control)
 ```
 
 **В репозитории не используется ничего из этого списка.** `push`/`removeAt`/`clear`/`insert`
@@ -824,7 +824,8 @@ currentPos.advdata.forEach(curAdvData => {
 
 ### Фрагмент формы в отдельном компоненте
 
-Локальная замена `ControlValueAccessor` — `user-data-all/user-partial-card/user-partial-card.component.ts:34-55`:
+Локальная замена `ControlValueAccessor` —
+`user-data-all/user-partial-card/user-partial-card.component.ts:34-55`:
 
 ```ts
 @Input({required: true}) authGroup!: FormGroup;
@@ -867,8 +868,7 @@ export function BindToControl(destroyRef: DestroyRef, control: AbstractControl,
 ### Чего в репозитории нет
 
 Начиная с Angular 18 у каждого контрола есть единый типизированный поток
-`events: Observable<ControlEvent>` (`forms.d.ts:2691`) с шестью видами событий
-(`forms.d.ts:2299-2375`):
+`events: Observable<ControlEvent>` с шестью видами событий:
 
 | Событие | Поле | Когда |
 |---|---|---|
@@ -892,7 +892,8 @@ public MustShowControlErros(control: AbstractControl) {
 }
 ```
 
-Метод зовётся из шаблона по нескольку раз на поле (`register.component.html:51,56,78,82,93,97,107,111` — восемь вызовов на четыре поля),
+Метод зовётся из шаблона по нескольку раз на поле
+(`register.component.html:51,56,78,82,93,97,107,111` — восемь вызовов на четыре поля),
 то есть на каждую проверку изменений. Пока полей десятки — не проблема; но именно эту
 конструкцию `events` и позволяет заменить на подписку.
 
@@ -901,7 +902,7 @@ public MustShowControlErros(control: AbstractControl) {
 ```ts
 control.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(e => {
   if (e instanceof TouchedChangeEvent) { /* e.touched, e.source */ }
-  if (e instanceof StatusChangeEvent)  { /* e.status */ }
+  if (e instanceof StatusChangeEvent) { /* e.status */ }
 });
 ```
 
@@ -935,10 +936,10 @@ control.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(e => {
 `invite-register-user.component.ts:160-163`:
 
 ```ts
-revalidateForm(this.authGroup);                        // перечитать серверные ошибки (§9)
-this.authGroup.markAsUntouched({ onlySelf: false });   // «пользователь ничего не трогал»
-this.authGroup.markAsPristine({ onlySelf: false });    // «изменений нет»
-this.authGroup.enable({ emitEvent: false });           // снять блокировку на время запроса
+revalidateForm(this.authGroup); // перечитать серверные ошибки (§9)
+this.authGroup.markAsUntouched({ onlySelf: false }); // «пользователь ничего не трогал»
+this.authGroup.markAsPristine({ onlySelf: false }); // «изменений нет»
+this.authGroup.enable({ emitEvent: false }); // снять блокировку на время запроса
 ```
 
 Значения при этом **сохраняются** — сбрасываются только флаги. Это осознанно: после успешного
@@ -1010,16 +1011,16 @@ this.authGroup.enable({ emitEvent: false });           // снять блоки�
 таблицу так:
 
 ```
-[formGroup]="authGroup"                     → :1
-  [formArrayName]="arrayGroupName"          → :3    (массив строк)
-    [formGroupName]="DataItem.rowNumber - 1" → :75   (строка — тоже FormArray!)
-      [formControlName]="cellControlName"    → :84   (ячейка, индекс числом)
+[formGroup]="authGroup" → :1
+  [formArrayName]="arrayGroupName" → :3 (массив строк)
+    [formGroupName]="DataItem.rowNumber - 1" → :75 (строка — тоже FormArray!)
+      [formControlName]="cellControlName" → :84 (ячейка, индекс числом)
 ```
 
 Строка таблицы — это `FormArray`, но привязана она директивой `formGroupName`, а не
 `formArrayName`. Работает, потому что обе директивы ищут ребёнка по имени в родителе; но
-`FormGroupName` объявляет `control: FormGroup` (`forms.d.ts:4090`), а лежит там `FormArray`
-(`FormArrayName` — отдельный класс, `forms.d.ts:4129`). Для новых мест правильная директива
+`FormGroupName` объявляет `control: FormGroup`, а лежит там `FormArray`
+(`FormArrayName` — отдельный класс). Для новых мест правильная директива
 `formArrayName`.
 
 **4. Внутри шаблонов `kendo-grid` контекст директив формы теряется.** Ячейка грида
@@ -1066,8 +1067,8 @@ export class MyInputComponent implements ControlValueAccessor {
   private onTouched: () => void = () => {};
 
   writeValue(value: string): void { /* форма → компонент */ }
-  registerOnChange(fn: (v: string) => void): void { this.onChange = fn; }   // компонент → форма
-  registerOnTouched(fn: () => void): void { this.onTouched = fn; }          // компонент → форма (blur)
+  registerOnChange(fn: (v: string) => void): void { this.onChange = fn; } // компонент → форма
+  registerOnTouched(fn: () => void): void { this.onTouched = fn; } // компонент → форма (blur)
   setDisabledState(isDisabled: boolean): void { /* реакция на disable() */ }
 }
 ```
@@ -1109,7 +1110,8 @@ export interface CellControlNumberTextBox extends CellControlBase {
 }
 ```
 
-Разбирается через `@switch (controlPoly.controlType)` (`cashboxes-table-editfrom.component.html:81-113`),
+Разбирается через `@switch (controlPoly.controlType)`
+(`cashboxes-table-editfrom.component.html:81-113`),
 и внутри каждой ветки тип сужается до нужного варианта — `controlPoly.maxLength` доступен
 только в ветке `EditTextBox`. Приём хороший и для таблиц с неизвестной заранее структурой —
 единственно разумный.
@@ -1221,7 +1223,8 @@ export interface CellControlNumberTextBox extends CellControlBase {
 - **`Object.getOwnPropertyNames(control.parent)` не даёт имён контролов.** `formUtils.ts:246`:
 
   ```ts
-  var controlName = Object.getOwnPropertyNames(control.parent).find((k) => control.parent?.get(k) === control);
+  var controlName = Object.getOwnPropertyNames(control.parent).find((k) => control.parent?.get(k)
+  === control);
   ```
 
   Метод возвращает собственные JS-свойства объекта `FormGroup` (`_pendingDirty`, `validator`
@@ -1258,8 +1261,7 @@ const f = form(model, (path) => {
 });
 ```
 
-Что доступно (`node_modules/@angular/forms/types/signals.d.ts`,
-`_structure-chunk.d.ts`): `form()`, `schema()`, `apply`/`applyEach`/`applyWhen`, `submit()`,
+Что доступно: `form()`, `schema()`, `apply`/`applyEach`/`applyWhen`, `submit()`,
 валидаторы `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `email`, `minDate`,
 `maxDate`, `validate`, `validateTree`, а также `disabled`, `hidden`, `readonly`, `debounce`
 и `transformedValue`.

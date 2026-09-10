@@ -8,6 +8,7 @@
 Соседние документы (лежат в репозитории [TestTasks](https://github.com/eagleoriginal/TestTasks)):
 [angular-render-hooks.md](https://github.com/eagleoriginal/TestTasks/blob/master/angular-render-hooks.md),
 [angular-change-detection-zoneless.md](https://github.com/eagleoriginal/TestTasks/blob/master/angular-change-detection-zoneless.md).
+Здесь же, в этом репозитории: [angular-reactive-forms.md](angular-reactive-forms.md).
 
 ---
 
@@ -108,8 +109,7 @@ detection, ничего не ломается при гидратации.
 узел удаляется, а не скрывается.
 
 Вот ровно эту дыру закрывает `animate.leave` в Angular 22 — он заставляет фреймворк дождаться
-конца анимации, прежде чем убрать узел (`node_modules/@angular/core/types/core.d.ts:5286-5302`).
-Почему это стоит начать использовать — §12.
+конца анимации, прежде чем убрать узел. Почему это стоит начать использовать — §12.
 
 ### Поддержка
 
@@ -196,20 +196,9 @@ host:  {
 плюс `transition: height 0.2s ease-in` на `:host` (`extra-panel.component.scss:9`).
 
 Сама конструкция рабочая, и `!important` в биндинге доезжает до элемента — вопреки известному
-правилу «через `style.x = ...` важность не выставить». Angular разбирает значение сам,
-`_debug_node-chunk.mjs:5149-5153`:
-
-```js
-const isImportant = typeof value === 'string' ? value.endsWith('!important') : false;
-if (isImportant) {
-  value = value.slice(0, -10);
-  flags |= RendererStyleFlags2.Important;
-}
-renderer.setStyle(rNode, prop, value, flags);
-```
-
-Дальше `DefaultDomRenderer2` вызывает `el.style.setProperty(prop, value, 'important')`
-(`_dom_renderer-chunk.mjs:655-656`) — то есть трёхаргументную форму, которая важность
+правилу «через `style.x = ...` важность не выставить». Правило верно для чистого DOM, но
+Angular не присваивает свойство напрямую: он отрезает суффикс `!important` от значения и
+выставляет важность отдельным аргументом, трёхаргументной формой `setProperty`, которая её
 как раз поддерживает. Так что высота действительно переключается.
 
 **А вот `transition: height` на этой паре значений не срабатывает — ни на раскрытии, ни на
@@ -603,8 +592,8 @@ Render-хуки не выполняются при SSR и prerender — вооб
 
 1. **CSS по умолчанию** — `transition` и `@keyframes`, как в §3 и §4. Это должно покрывать
    всё, кроме перечисленного ниже.
-2. **`animate.enter` / `animate.leave`** для появления и ухода — `core.d.ts:5267-5302`. Это
-   штатная замена `@angular/animations` в Angular 22, и она закрывает единственную дыру CSS:
+2. **`animate.enter` / `animate.leave`** для появления и ухода. Это штатная замена
+  `@angular/animations` в Angular 22, и она закрывает единственную дыру CSS:
    уход элемента, который Angular удаляет из DOM.
 3. **WAAPI** — только там, где нужен перезапуск по требованию, то есть ровно `playAnimation`
    (§5). Один случай на весь клиент, и это правильная пропорция.
